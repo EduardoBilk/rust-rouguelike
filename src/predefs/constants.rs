@@ -14,6 +14,9 @@ pub const ROOM_MIN_SIZE: i32 = 6;
 pub const MAX_ROOMS: i32 = 30;
 
 pub const MAX_ROOM_ITEMS: i32 = 2;
+pub const INVENTORY_WIDTH: i32 = 50;
+
+pub const HEAL_AMOUNT: i32 = 4;
 
 pub const MAX_ROOM_MONSTERS: i32 = 3;
 

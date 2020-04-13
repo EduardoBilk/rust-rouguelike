@@ -1,4 +1,5 @@
 use tcod::colors::*;
+
 use crate::predefs::structs::{Tcod, Object, Game};
 
 use crate::predefs::structs::*;
@@ -6,6 +7,7 @@ use PlayerAction::*;
 use crate::predefs::constants::*;
 use crate::libs::make_map::*;
 use crate::libs::ai::*;
+use crate::libs::menu::*;
 
 pub fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) -> PlayerAction {
     use tcod::input::Key;
@@ -34,6 +36,17 @@ pub fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) 
                 .position(|object| object.pos() == objects[PLAYER].pos() && object.item.is_some());
             if let Some(item_id) = item_id {
                 pick_item_up(item_id, game, objects);
+            }
+            DidntTakeTurn
+        },
+        (Key { code: Text, .. }, "i", true) => {
+            // show the inventory
+            let inventory_index = inventory_menu(
+                &game.inventory,
+                "Press the key next to an item to use it, or any other to cancel.\n",
+                &mut tcod.root);
+            if let Some(inventory_index) = inventory_index {
+                use_item(inventory_index, tcod, game, objects);
             }
             DidntTakeTurn
         },

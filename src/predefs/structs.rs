@@ -92,6 +92,15 @@ impl Object{
             ), ORANGE);
         }
     }
+    /// heal by the given amount, without going over the maximum
+    pub fn heal(&mut self, amount: i32) {
+        if let Some(ref mut fighter) = self.fighter {
+            fighter.hp += amount;
+            if fighter.hp > fighter.max_hp {
+                fighter.hp = fighter.max_hp;
+            }
+        }
+    }
     /// set the color and then draw the character that represents this object at its position
     pub fn draw(&self, con: &mut dyn Console) {
         con.set_default_foreground(self.color);
@@ -224,4 +233,8 @@ impl Messages {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Item {
     Heal,
+}
+pub enum UseResult {
+    UsedUp,
+    Cancelled,
 }
