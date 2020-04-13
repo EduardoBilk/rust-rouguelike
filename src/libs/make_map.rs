@@ -2,6 +2,8 @@ use std::cmp;
 use rand::Rng;
 
 use tcod::colors::*;
+use tcod::map::Map as FovMap;
+use tcod::input::Mouse;
 
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
@@ -143,4 +145,18 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             objects.push(monster);
         }
     }
+}
+
+/// return a string with the names of all objects under the mouse
+pub fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> String {
+    let (x, y) = (mouse.cx as i32, mouse.cy as i32);
+
+    // create a list with the names of all objects at the mouse's coordinates and in FOV
+    let names = objects
+        .iter()
+        .filter(|obj| obj.pos() == (x, y) && fov_map.is_in_fov(obj.x, obj.y))
+        .map(|obj| obj.name.clone())
+        .collect::<Vec<_>>();
+
+    names.join(", ") // join the names, separated by commas
 }

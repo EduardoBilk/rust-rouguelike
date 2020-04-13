@@ -1,7 +1,9 @@
-use crate::predefs::constants::*;
-use crate::predefs::structs::{Tcod, Game,Object};
 use tcod::console::*;
 use tcod::colors::*;
+
+use crate::predefs::constants::*;
+use crate::predefs::structs::{Tcod, Game,Object};
+use crate::libs::make_map::*;
 
 pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: bool){
     if fov_recompute {
@@ -64,6 +66,25 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         max_hp,
         LIGHT_RED,
         DARKER_RED,
+    );
+    // print the game messages, one line at a time
+    let mut y = MSG_HEIGHT as i32;
+    for &(ref msg, color) in game.messages.iter().rev() {
+        let msg_height = tcod.panel.get_height_rect(MSG_X, y, MSG_WIDTH, 0, msg);
+        y -= msg_height;
+        if y < 0 {
+            break;
+        }
+        tcod.panel.set_default_foreground(color);
+        tcod.panel.print_rect(MSG_X, y, MSG_WIDTH, 0, msg);
+    }
+    tcod.panel.set_default_foreground(LIGHT_GREY);
+    tcod.panel.print_ex(
+        1,
+        0,
+        BackgroundFlag::None,
+        TextAlignment::Left,
+        get_names_under_mouse(tcod.mouse, objects, &tcod.fov),
     );
 
     // blit the contents of `panel` to the root console

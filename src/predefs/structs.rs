@@ -2,6 +2,7 @@
 use tcod::console::*;
 use tcod::colors::*;
 use tcod::map::Map as FovMap;
+use tcod::input::{Key, Mouse};
 use crate::libs::handle_keys::*;
 
 
@@ -10,6 +11,8 @@ pub struct Tcod {
     pub con: Offscreen,
     pub panel: Offscreen,
     pub fov: FovMap,
+    pub key: Key,  
+    pub mouse: Mouse,
 }
 
 #[derive(Debug)]
@@ -55,7 +58,7 @@ impl Object{
         ((dx.pow(2) + dy.pow(2)) as f32).sqrt()
     }
 
-    pub fn take_damage(&mut self, damage: i32) {
+    pub fn take_damage(&mut self, damage: i32, game: &mut Game) {
         // apply damage if possible
         if let Some(fighter) = self.fighter.as_mut() {
             if damage > 0 {
@@ -65,26 +68,26 @@ impl Object{
         if let Some(fighter) = self.fighter {
             if fighter.hp <= 0 {
                 self.alive = false;
-                fighter.on_death.callback(self);
+                fighter.on_death.callback(self, game);
             }
         }
     }
 
-    pub fn attack(&mut self, target: &mut Object) {
+    pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
         // a simple formula for attack damage
         let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
         if damage > 0 {
             // make the target take some damage
-            println!(
+            game.messages.add(format!(
                 "{} attacks {} for {} hit points.",
                 self.name, target.name, damage
-            );
-            target.take_damage(damage);
+            ), ORANGE);
+            target.take_damage(damage, game);
         } else {
-            println!(
+            game.messages.add(format!(
                 "{} attacks {} but it has no effect!",
                 self.name, target.name
-            );
+            ), ORANGE);
         }
     }
     /// set the color and then draw the character that represents this object at its position
@@ -123,6 +126,7 @@ pub type Map = Vec<Vec<Tile>>;
 
 pub struct Game{
     pub map: Map,
+    pub messages: Messages,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -185,17 +189,17 @@ pub enum DeathCallback {
     Monster,
 }
 impl DeathCallback {
-    fn callback(self, object: &mut Object) {
+    pub fn callback(self, object: &mut Object, game: &mut Game) {
         use DeathCallback::*;
-        let callback: fn(&mut Object) = match self {
+        let callback: fn(&mut Object, &mut Game) = match self {
             Player => player_death,
             Monster => monster_death,
         };
-        callback(object);
+        callback(object, game);
     }
 }
 
-struct Messages {
+pub struct Messages {
     messages: Vec<(String, Color)>,
 }
 impl Messages {
