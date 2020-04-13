@@ -13,6 +13,8 @@ pub const ROOM_MAX_SIZE: i32 = 10;
 pub const ROOM_MIN_SIZE: i32 = 6;
 pub const MAX_ROOMS: i32 = 30;
 
+pub const MAX_ROOM_ITEMS: i32 = 2;
+
 pub const MAX_ROOM_MONSTERS: i32 = 3;
 
 pub const COLOR_DARK_WALL: Color = Color { r: 0, g: 0, b: 100 };

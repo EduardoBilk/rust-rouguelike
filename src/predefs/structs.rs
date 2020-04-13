@@ -26,6 +26,7 @@ pub struct Object{
     pub alive: bool,
     pub fighter: Option<Fighter>,  
     pub ai: Option<Ai>,
+    pub item: Option<Item>,
 }
 
 impl Object{
@@ -40,6 +41,7 @@ impl Object{
             alive: false,
             fighter: None,
             ai: None,
+            item: None,
         }
     }
 
@@ -127,6 +129,7 @@ pub type Map = Vec<Vec<Tile>>;
 pub struct Game{
     pub map: Map,
     pub messages: Messages,
+    pub inventory: Vec<Object>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -216,4 +219,9 @@ impl Messages {
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &(String, Color)> {
         self.messages.iter()
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Item {
+    Heal,
 }

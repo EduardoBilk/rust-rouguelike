@@ -110,6 +110,8 @@ pub fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
     // choose random number of monsters
     let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
+    // choose random number of items
+    let num_items = rand::thread_rng().gen_range(0, MAX_ROOM_ITEMS + 1);
 
     for _ in 0..num_monsters {
         // choose random spot for this monster
@@ -145,6 +147,19 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             objects.push(monster);
         }
     }
+    for _ in 0..num_items {
+        // choose random spot for this item
+        let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
+        let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
+    
+        // only place it if the tile is not blocked
+        if !is_blocked(x, y, map, objects) {
+            // create a healing potion
+            let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
+            object.item = Some(Item::Heal);
+            objects.push(object);
+        }
+    }
 }
 
 /// return a string with the names of all objects under the mouse
@@ -159,4 +174,22 @@ pub fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap)
         .collect::<Vec<_>>();
 
     names.join(", ") // join the names, separated by commas
+}
+
+/// add to the player's inventory and remove from the map
+pub fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
+    if game.inventory.len() >= 26 {
+        game.messages.add(
+            format!(
+                "Your inventory is full, cannot pick up {}.",
+                objects[object_id].name
+            ),
+            RED,
+        );
+    } else {
+        let item = objects.swap_remove(object_id);
+        game.messages
+            .add(format!("You picked up a {}!", item.name), GREEN);
+        game.inventory.push(item);
+    }
 }

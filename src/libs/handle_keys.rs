@@ -27,7 +27,16 @@ pub fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) 
             DidntTakeTurn
         }
         (Key { code: Escape, .. },_,_,) => return Exit, // exit game
-        
+        (Key { code: Text, .. }, "g", true) => {
+            // pick up an item
+            let item_id = objects
+                .iter()
+                .position(|object| object.pos() == objects[PLAYER].pos() && object.item.is_some());
+            if let Some(item_id) = item_id {
+                pick_item_up(item_id, game, objects);
+            }
+            DidntTakeTurn
+        },
         // movement keys
         (Key { code: Up, .. },_,true,) => {
             player_move_or_attack( 0, -1, game, objects);

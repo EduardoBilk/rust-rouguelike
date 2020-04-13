@@ -47,6 +47,7 @@ fn main() {
     let mut game = Game {
         map: make_map(&mut objects),
         messages: Messages::new(),
+        inventory: vec![],
     };
     
     for y in 0..MAP_HEIGHT {
