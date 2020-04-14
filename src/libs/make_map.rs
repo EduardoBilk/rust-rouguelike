@@ -156,7 +156,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         // let itens_scrolls = vec![Item::ScrollLighting];
 
         let floor_01_potions = vec![Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::PotionHp,Item::PotionPwr];
-        let floor_01_scrolls = vec![Item::ScrollLighting,Item::ScrollLighting];
+        let floor_01_scrolls = vec![Item::ScrollLighting];
         
         
         // only place it if the tile is not blocked
@@ -164,7 +164,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             let dice = rand::random::<f32>();
             
             let result: (Object, Item) = if dice < 0.7 {
-                let item: Item = floor_01_potions[rand::thread_rng().gen_range(0, floor_01_potions.len()-1 )];
+                let item: Item = floor_01_potions[rand::thread_rng().gen_range(0, floor_01_potions.len() )];
                 // create an item
                 let object = match item{
                     Item::MinorHeal => {Object::new(x, y, '!', "minor healing potion", VIOLET, false)},
