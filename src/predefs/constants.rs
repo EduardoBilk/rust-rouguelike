@@ -21,6 +21,8 @@ pub const HEAL_AMOUNT: i32 = 10;
 pub const MAJOR_HEAL_AMOUNT: i32 = 30;
 pub const LIGHTNING_DAMAGE: i32 = 40;
 pub const LIGHTNING_RANGE: i32 = 5;
+pub const CONFUSE_RANGE: i32 = 8;
+pub const CONFUSE_NUM_TURNS: i32 = 10;
 
 pub const MAX_POWER: i32 = 30;
 pub const MAX_DEFENSE: i32 = 30;

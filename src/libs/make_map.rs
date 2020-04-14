@@ -156,7 +156,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         // let itens_scrolls = vec![Item::ScrollLighting];
 
         let floor_01_potions = vec![Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::PotionHp,Item::PotionPwr];
-        let floor_01_scrolls = vec![Item::ScrollLighting];
+        let floor_01_scrolls = vec![Item::ScrollLighting, Item::ScrollConfusion];
         
         
         // only place it if the tile is not blocked
@@ -182,6 +182,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                 let item = floor_01_scrolls[rand::thread_rng().gen_range(0, floor_01_scrolls.len()-1)];
                 let object = match item{
                     Item::ScrollLighting => {Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false)},
+                    Item::ScrollConfusion => {Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false)},
                     _ => {Object::new(x, y, '0', "empty", WHITE, false)},
                 };
                 let r = (object, item);
