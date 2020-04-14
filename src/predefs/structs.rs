@@ -61,6 +61,10 @@ impl Object{
         ((dx.pow(2) + dy.pow(2)) as f32).sqrt()
     }
 
+    pub fn distance(&self, x: i32, y: i32) -> f32 {
+        (((x - self.x).pow(2) + (y - self.y).pow(2)) as f32).sqrt()
+    }
+
     pub fn take_damage(&mut self, damage: i32, game: &mut Game) {
         // apply damage if possible
         if let Some(fighter) = self.fighter.as_mut() {
@@ -270,6 +274,7 @@ pub enum Item {
     PotionHp,
     ScrollLighting,
     ScrollConfusion,
+    ScrollFireball,
 
 
 }

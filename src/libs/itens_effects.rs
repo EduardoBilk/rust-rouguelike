@@ -1,7 +1,7 @@
 use tcod::colors::*;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
-use crate::libs::make_map::closest_monster;
+use crate::libs::make_map::{closest_monster, target_tile};
 
 pub fn cast_heal(
     _inventory_id: usize,
@@ -147,4 +147,42 @@ pub fn cast_confusion(
             .add("No enemy is close enough to strike.", RED);
         UseResult::Cancelled
     }
+}
+pub fn cast_fireball(
+    _inventory_id: usize,
+    tcod: &mut Tcod,
+    game: &mut Game,
+    objects: &mut [Object],
+) -> UseResult {
+    // ask the player for a target tile to throw a fireball at
+    game.messages.add(
+        "Left-click a target tile for the fireball, or right-click to cancel.",
+        LIGHT_CYAN,
+    );
+    let (x, y) = match target_tile(tcod, game, objects, None) {
+        Some(tile_pos) => tile_pos,
+        None => return UseResult::Cancelled,
+    };
+    game.messages.add(
+        format!(
+            "The fireball explodes, burning everything within {} tiles!",
+            FIREBALL_RADIUS
+        ),
+        ORANGE,
+    );
+
+    for obj in objects {
+        if obj.distance(x, y) <= FIREBALL_RADIUS as f32 && obj.fighter.is_some() {
+            game.messages.add(
+                format!(
+                    "The {} gets burned for {} hit points.",
+                    obj.name, FIREBALL_DAMAGE
+                ),
+                ORANGE,
+            );
+            obj.take_damage(FIREBALL_DAMAGE, game);
+        }
+    }
+
+    UseResult::UsedUp
 }

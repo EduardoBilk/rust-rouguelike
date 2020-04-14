@@ -3,10 +3,11 @@ use rand::Rng;
 
 use tcod::colors::*;
 use tcod::map::Map as FovMap;
-use tcod::input::Mouse;
+use tcod::input;
 
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
+use crate::libs::render::*;
 
 
 pub fn make_map(objects: &mut Vec<Object>) -> Map{
@@ -156,7 +157,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         // let itens_scrolls = vec![Item::ScrollLighting];
 
         let floor_01_potions = vec![Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::PotionHp,Item::PotionPwr];
-        let floor_01_scrolls = vec![Item::ScrollLighting, Item::ScrollConfusion];
+        let floor_01_scrolls = vec![Item::ScrollLighting, Item::ScrollConfusion, Item::ScrollFireball ];
         
         
         // only place it if the tile is not blocked
@@ -183,6 +184,8 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                 let object = match item{
                     Item::ScrollLighting => {Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false)},
                     Item::ScrollConfusion => {Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false)},
+                    Item::ScrollFireball => {Object::new(x, y, '#', "scroll of fireball", LIGHT_YELLOW, false)},
+                    
                     _ => {Object::new(x, y, '0', "empty", WHITE, false)},
                 };
                 let r = (object, item);
@@ -199,7 +202,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
    
 
 /// return a string with the names of all objects under the mouse
-pub fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> String {
+pub fn get_names_under_mouse(mouse: input::Mouse, objects: &[Object], fov_map: &FovMap) -> String {
     let (x, y) = (mouse.cx as i32, mouse.cy as i32);
 
     // create a list with the names of all objects at the mouse's coordinates and in FOV
@@ -251,4 +254,35 @@ pub fn closest_monster(tcod: &Tcod, objects: &[Object], max_range: i32) -> Optio
         }
     }
     closest_enemy
+}
+pub fn target_tile(
+    tcod: &mut Tcod,
+    game: &mut Game,
+    objects: &[Object],
+    max_range: Option<f32>,
+) -> Option<(i32, i32)> {
+    use tcod::input::*;
+    loop {
+        // render the screen. this erases the inventory and shows the names of
+        // objects under the mouse.
+        tcod.root.flush();
+        let event = input::check_for_event(input::KEY_PRESS | input::MOUSE).map(|e| e.1);
+        match event {
+            Some(Event::Mouse(m)) => tcod.mouse = m,
+            Some(Event::Key(k)) => tcod.key = k,
+            None => tcod.key = Default::default(),
+        }
+        render_all(tcod, game, objects, false);
+
+        let (x, y) = (tcod.mouse.cx as i32, tcod.mouse.cy as i32);
+
+        let in_fov = (x < MAP_WIDTH) && (y < MAP_HEIGHT) && tcod.fov.is_in_fov(x, y);
+        let in_range = max_range.map_or(true, |range| objects[PLAYER].distance(x, y) <= range);
+        if tcod.mouse.lbutton_pressed && in_fov && in_range {
+            return Some((x, y));
+        }
+        if tcod.mouse.rbutton_pressed || tcod.key.code == input::KeyCode::Escape {
+            return None; // cancel if the player right-clicked or pressed Escape
+        }
+    }
 }
