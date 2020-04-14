@@ -4,6 +4,7 @@ use tcod::colors::*;
 use tcod::map::Map as FovMap;
 use tcod::input::{Key, Mouse};
 use crate::libs::handle_keys::*;
+use crate::predefs::constants::*;
 
 
 pub struct Tcod {
@@ -92,7 +93,7 @@ impl Object{
             ), ORANGE);
         }
     }
-    /// heal by the given amount, without going over the maximum
+
     pub fn heal(&mut self, amount: i32) {
         if let Some(ref mut fighter) = self.fighter {
             fighter.hp += amount;
@@ -101,6 +102,31 @@ impl Object{
             }
         }
     }
+    pub fn inc_power(&mut self, amount: i32) {
+        if let Some(ref mut fighter) = self.fighter {
+            fighter.power += amount;
+            if fighter.power > MAX_POWER {
+                fighter.power = MAX_POWER;
+            }
+        }
+    }
+    pub fn inc_defense(&mut self, amount: i32) {
+        if let Some(ref mut fighter) = self.fighter {
+            fighter.defense += amount;
+            if fighter.defense > MAX_DEFENSE {
+                fighter.defense = MAX_DEFENSE;
+            }
+        }
+    }
+    pub fn inc_max_hp(&mut self, amount: i32) {
+        if let Some(ref mut fighter) = self.fighter {
+            fighter.max_hp += amount;
+            if fighter.max_hp > MAX_MAX_HP {
+                fighter.max_hp = MAX_MAX_HP;
+            }
+        }
+    }
+    
     /// set the color and then draw the character that represents this object at its position
     pub fn draw(&self, con: &mut dyn Console) {
         con.set_default_foreground(self.color);
@@ -232,7 +258,13 @@ impl Messages {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Item {
+    MinorHeal,
     Heal,
+    MajorHeal,
+    PotionPwr,
+    PotionDef,
+    PotionHp,
+
 }
 pub enum UseResult {
     UsedUp,

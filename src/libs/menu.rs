@@ -3,6 +3,7 @@ use tcod::console::*;
 use tcod::colors::*;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
+use crate::libs::itens_effects::*;
 
 fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {
     assert!(
@@ -81,7 +82,12 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
     // just call the "use_function" if it is defined
     if let Some(item) = game.inventory[inventory_id].item {
         let on_use = match item {
+            MinorHeal => cast_heal,
             Heal => cast_heal,
+            MajorHeal => cast_heal,
+            PotionPwr => cast_potion_pwr,
+            PotionDef => cast_potion_def,
+            PotionHp => cast_potion_hp,
         };
         match on_use(inventory_id, tcod, game, objects) {
             UseResult::UsedUp => {
@@ -98,24 +104,4 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
             WHITE,
         );
     }
-}
-
-pub fn cast_heal(
-    _inventory_id: usize,
-    _tcod: &mut Tcod,
-    game: &mut Game,
-    objects: &mut [Object],
-) -> UseResult {
-    // heal the player
-    if let Some(fighter) = objects[PLAYER].fighter {
-        if fighter.hp == fighter.max_hp {
-            game.messages.add("You are already at full health.", RED);
-            return UseResult::Cancelled;
-        }
-        game.messages
-            .add("Your wounds start to feel better!", LIGHT_VIOLET);
-        objects[PLAYER].heal(HEAL_AMOUNT);
-        return UseResult::UsedUp;
-    }
-    UseResult::Cancelled
 }

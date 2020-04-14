@@ -151,12 +151,23 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         // choose random spot for this item
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
-    
+        // choose random item
+        let itens = vec![Item::MinorHeal,Item::Heal,Item::MajorHeal,Item::PotionPwr,Item::PotionDef,Item::PotionHp];
+        let item = itens[rand::thread_rng().gen_range(0, itens.len()-1_)];
+
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            // create a healing potion
-            let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
-            object.item = Some(Item::Heal);
+            // create an item
+            let mut object = match item{
+                Item::MinorHeal => {Object::new(x, y, '!', "minor healing potion", VIOLET, false)},
+                Item::Heal => {Object::new(x, y, '!', "healing potion", VIOLET, false)},
+                Item::MajorHeal => {Object::new(x, y, '!', "major healing potion", VIOLET, false)},
+                Item::PotionPwr => {Object::new(x, y, '!', "potion of strenth", VIOLET, false)},
+                Item::PotionDef => {Object::new(x, y, '!', "potion of defense", VIOLET, false)},
+                Item::PotionHp => {Object::new(x, y, '!', "potion of vitality", VIOLET, false)},
+            };
+            
+            object.item = Some(item);
             objects.push(object);
         }
     }
