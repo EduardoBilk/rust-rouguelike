@@ -1,6 +1,7 @@
 use tcod::colors::*;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
+use crate::libs::make_map::closest_monster;
 
 pub fn cast_heal(
     _inventory_id: usize,
@@ -87,3 +88,32 @@ pub fn cast_potion_hp(
     }
     UseResult::Cancelled
 }
+
+pub fn cast_lightning(
+    _inventory_id: usize,
+    tcod: &mut Tcod,
+    game: &mut Game,
+    objects: &mut [Object],
+) -> UseResult {
+    // find closest enemy (inside a maximum range and damage it)
+    let monster_id = closest_monster(tcod, objects, LIGHTNING_RANGE);
+    if let Some(monster_id) = monster_id {
+        // zap it!
+        game.messages.add(
+            format!(
+                "A lightning bolt strikes the {} with a loud thunder! \
+                 The damage is {} hit points.",
+                objects[monster_id].name, LIGHTNING_DAMAGE
+            ),
+            LIGHT_BLUE,
+        );
+        objects[monster_id].take_damage(LIGHTNING_DAMAGE, game);
+        UseResult::UsedUp
+    } else {
+        // no enemy found within maximum range
+        game.messages
+            .add("No enemy is close enough to strike.", RED);
+        UseResult::Cancelled
+    }
+}
+

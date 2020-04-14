@@ -88,6 +88,7 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
             PotionPwr => cast_potion_pwr,
             PotionDef => cast_potion_def,
             PotionHp => cast_potion_hp,
+            ScrollLighting => cast_lightning,
         };
         match on_use(inventory_id, tcod, game, objects) {
             UseResult::UsedUp => {

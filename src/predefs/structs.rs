@@ -264,6 +264,8 @@ pub enum Item {
     PotionPwr,
     PotionDef,
     PotionHp,
+    ScrollLighting,
+
 
 }
 pub enum UseResult {

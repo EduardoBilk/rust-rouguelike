@@ -152,26 +152,50 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
         // choose random item
-        let itens = vec![Item::MinorHeal,Item::Heal,Item::MajorHeal,Item::PotionPwr,Item::PotionDef,Item::PotionHp];
-        let item = itens[rand::thread_rng().gen_range(0, itens.len()-1_)];
+        // let itens_potions = vec![Item::MinorHeal,Item::Heal,Item::MajorHeal,Item::PotionPwr,Item::PotionDef,Item::PotionHp,Item::ScrollLighting];
+        // let itens_scrolls = vec![Item::ScrollLighting];
 
+        let floor_01_potions = vec![Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::MinorHeal,Item::PotionHp,Item::PotionPwr];
+        let floor_01_scrolls = vec![Item::ScrollLighting,Item::ScrollLighting];
+        
+        
         // only place it if the tile is not blocked
         if !is_blocked(x, y, map, objects) {
-            // create an item
-            let mut object = match item{
-                Item::MinorHeal => {Object::new(x, y, '!', "minor healing potion", VIOLET, false)},
-                Item::Heal => {Object::new(x, y, '!', "healing potion", VIOLET, false)},
-                Item::MajorHeal => {Object::new(x, y, '!', "major healing potion", VIOLET, false)},
-                Item::PotionPwr => {Object::new(x, y, '!', "potion of strenth", VIOLET, false)},
-                Item::PotionDef => {Object::new(x, y, '!', "potion of defense", VIOLET, false)},
-                Item::PotionHp => {Object::new(x, y, '!', "potion of vitality", VIOLET, false)},
-            };
+            let dice = rand::random::<f32>();
             
+            let result: (Object, Item) = if dice < 0.7 {
+                let item: Item = floor_01_potions[rand::thread_rng().gen_range(0, floor_01_potions.len()-1 )];
+                // create an item
+                let object = match item{
+                    Item::MinorHeal => {Object::new(x, y, '!', "minor healing potion", VIOLET, false)},
+                    Item::Heal => {Object::new(x, y, '!', "healing potion", VIOLET, false)},
+                    Item::MajorHeal => {Object::new(x, y, '!', "major healing potion", VIOLET, false)},
+                    Item::PotionPwr => {Object::new(x, y, '!', "potion of strenth", VIOLET, false)},
+                    Item::PotionDef => {Object::new(x, y, '!', "potion of defense", VIOLET, false)},
+                    Item::PotionHp => {Object::new(x, y, '!', "potion of vitality", VIOLET, false)},
+
+                    _ => {Object::new(x, y, '0', "empty", WHITE, false)},
+                };                
+                let r = (object, item);
+                r
+            }else{
+                let item = floor_01_scrolls[rand::thread_rng().gen_range(0, floor_01_scrolls.len()-1)];
+                let object = match item{
+                    Item::ScrollLighting => {Object::new(x, y, '#', "scroll of lightning bolt", LIGHT_YELLOW, false)},
+                    _ => {Object::new(x, y, '0', "empty", WHITE, false)},
+                };
+                let r = (object, item);
+                r
+            };
+            let (mut object, item) = result;
             object.item = Some(item);
             objects.push(object);
-        }
-    }
+
+                    
+        };
+    };
 }
+   
 
 /// return a string with the names of all objects under the mouse
 pub fn get_names_under_mouse(mouse: Mouse, objects: &[Object], fov_map: &FovMap) -> String {
@@ -203,4 +227,27 @@ pub fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>
             .add(format!("You picked up a {}!", item.name), GREEN);
         game.inventory.push(item);
     }
+}
+
+/// find closest enemy, up to a maximum range, and in the player's FOV
+pub fn closest_monster(tcod: &Tcod, objects: &[Object], max_range: i32) -> Option<usize> {
+    let mut closest_enemy = None;
+    let mut closest_dist = (max_range + 1) as f32; // start with (slightly more than) maximum range
+
+    for (id, object) in objects.iter().enumerate() {
+        if (id != PLAYER)
+            && object.fighter.is_some()
+            && object.ai.is_some()
+            && tcod.fov.is_in_fov(object.x, object.y)
+        {
+            // calculate distance between this object and the player
+            let dist = objects[PLAYER].distance_to(object);
+            if dist < closest_dist {
+                // it's closer, so remember it
+                closest_enemy = Some(id);
+                closest_dist = dist;
+            }
+        }
+    }
+    closest_enemy
 }
