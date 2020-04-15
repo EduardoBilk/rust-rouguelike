@@ -108,3 +108,10 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
         );
     }
 }
+pub fn drop_item(inventory_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
+    let mut item = game.inventory.remove(inventory_id);
+    item.set_pos(objects[PLAYER].x, objects[PLAYER].y);
+    game.messages
+        .add(format!("You dropped a {}.", item.name), YELLOW);
+    objects.push(item);
+}
