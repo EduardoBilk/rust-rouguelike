@@ -1,4 +1,5 @@
 
+use serde::{Deserialize, Serialize};
 use tcod::console::*;
 use tcod::colors::*;
 use tcod::map::Map as FovMap;
@@ -16,7 +17,7 @@ pub struct Tcod {
     pub mouse: Mouse,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Object{
     pub x: i32,
     pub y: i32,
@@ -138,7 +139,7 @@ impl Object{
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Tile {
     pub blocked: bool,
     pub explored: bool,
@@ -165,13 +166,14 @@ impl Tile {
 
 pub type Map = Vec<Vec<Tile>>;
 
+#[derive(Serialize, Deserialize)]
 pub struct Game{
     pub map: Map,
     pub messages: Messages,
     pub inventory: Vec<Object>,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Rect {
     pub x1: i32,
     pub y1: i32,
@@ -203,7 +205,7 @@ impl Rect {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq,Serialize, Deserialize)]
 pub enum PlayerAction {
     TookTurn,
     DidntTakeTurn,
@@ -211,7 +213,7 @@ pub enum PlayerAction {
 }
 
 // combat-related properties and methods (monster, player, NPC).
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Fighter {
     pub max_hp: i32,
     pub hp: i32,
@@ -220,7 +222,7 @@ pub struct Fighter {
     pub on_death: DeathCallback,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Ai {
     Basic,
     Confused {
@@ -229,7 +231,7 @@ pub enum Ai {
     },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DeathCallback {
     Player,
     Monster,
@@ -244,8 +246,8 @@ impl DeathCallback {
         callback(object, game);
     }
 }
-
-pub struct Messages {
+#[derive(Serialize, Deserialize)]
+pub struct Messages { 
     messages: Vec<(String, Color)>,
 }
 impl Messages {
@@ -264,7 +266,7 @@ impl Messages {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Item {
     MinorHeal,
     Heal,
@@ -278,6 +280,7 @@ pub enum Item {
 
 
 }
+#[derive(Serialize, Deserialize)]
 pub enum UseResult {
     UsedUp,
     Cancelled,

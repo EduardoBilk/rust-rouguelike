@@ -1,4 +1,3 @@
-use tcod::colors::*;
 use tcod::console::*;
 use tcod::map::Map as FovMap;
 
@@ -31,3 +30,5 @@ fn main() {
 
     main_menu(&mut tcod);
 }
+
+
