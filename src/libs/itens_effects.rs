@@ -1,7 +1,7 @@
 use tcod::colors::*;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
-use crate::libs::make_map::{closest_monster, target_tile};
+use crate::libs::make_map::{closest_monster, target_tile, target_monster};
 
 pub fn cast_heal(
     _inventory_id: usize,
@@ -124,7 +124,13 @@ pub fn cast_confusion(
     objects: &mut [Object],
 ) -> UseResult {
     // find closest enemy in-range and confuse it
-    let monster_id = closest_monster(tcod, objects,CONFUSE_RANGE) ;
+    // let monster_id = closest_monster(tcod, objects,CONFUSE_RANGE) ;
+    // ask the player for a target to confuse
+    game.messages.add(
+        "Left-click an enemy to confuse it, or right-click to cancel.",
+        LIGHT_CYAN,
+    );
+    let monster_id = target_monster(tcod, game, objects, Some(CONFUSE_RANGE as f32));
     if let Some(monster_id) = monster_id {
         let old_ai = objects[monster_id].ai.take().unwrap_or(Ai::Basic);
         // replace the monster's AI with a "confused" one; after
