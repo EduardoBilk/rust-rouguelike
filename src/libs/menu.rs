@@ -1,9 +1,14 @@
 
 use tcod::console::*;
 use tcod::colors::*;
+use tcod::input;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
 use crate::libs::itens_effects::*;
+use crate::libs::make_map::*;
+use crate::libs::handle_keys::*;
+use crate::libs::render::*;
+use crate::libs::ai::*;
 
 fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {
     assert!(
@@ -26,6 +31,13 @@ fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root)
         TextAlignment::Left,
         header,
     );
+    // calculate total height for the header (after auto-wrap) and one line per option
+    let header_height = if header.is_empty() {
+        0
+    } else {
+        root.get_height_rect(0, 0, width, SCREEN_HEIGHT, header)
+    };
+    let height = options.len() as i32 + header_height;
     // print all the options
     for (index, option_text) in options.iter().enumerate() {
         let menu_letter = (b'a' + index as u8) as char;
@@ -114,4 +126,120 @@ pub fn drop_item(inventory_id: usize, game: &mut Game, objects: &mut Vec<Object>
     game.messages
         .add(format!("You dropped a {}.", item.name), YELLOW);
     objects.push(item);
+}
+pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
+    // create object representing the player
+    let mut player = Object::new(0, 0, '@', "player", WHITE, true);
+    player.alive = true;
+    player.fighter = Some(Fighter {
+        max_hp: 30,
+        hp: 30,
+        defense: 2,
+        power: 5,
+        on_death: DeathCallback::Player,  // <1>
+    });
+
+    // the list of objects with just the player
+    let mut objects = vec![player];
+
+    let mut game = Game {
+        // generate map (at this point it's not drawn to the screen)
+        map: make_map(&mut objects),
+        messages: Messages::new(),
+        inventory: vec![],  // <1>
+    };
+
+    initialise_fov(tcod, &game.map);
+
+    // a warm welcoming message!
+    game.messages.add(
+        "Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.",
+        RED,
+    );
+
+    (game, objects)
+}
+pub fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
+    // force FOV "recompute" first time through the game loop
+    use tcod::input::*;
+    let mut previous_player_position = (-1, -1);
+
+    while !tcod.root.window_closed() {
+        // clear the screen of the previous frame
+        tcod.con.clear();
+
+        match input::check_for_event(input::MOUSE | input::KEY_PRESS).map(|e| e.1) {
+            Some(Event::Mouse(m)) => tcod.mouse = m,
+            Some(Event::Key(k)) => tcod.key = k,
+            _ => tcod.key = Default::default(),
+        }
+
+        // render the screen
+        let fov_recompute = previous_player_position != (objects[PLAYER].pos());  // <1>
+        render_all(tcod, game, &objects, fov_recompute);
+
+        tcod.root.flush();
+
+        // handle keys and exit game if needed
+        previous_player_position = objects[PLAYER].pos();
+        let player_action = handle_keys(tcod, game, objects);
+        if player_action == PlayerAction::Exit {
+            break;
+        }
+
+        // let monsters take their turn
+        if objects[PLAYER].alive && player_action != PlayerAction::DidntTakeTurn {
+            for id in 0..objects.len() {
+                if objects[id].ai.is_some() {
+                    ai_take_turn(id, tcod, game, objects);
+                }
+            }
+        }
+    }
+}
+
+pub fn main_menu(tcod: &mut Tcod) {
+    let img = tcod::image::Image::from_file("menu_background.png") 
+        .ok()
+        .expect("Background image not found");
+        
+    
+
+    while !tcod.root.window_closed() {  
+        // show the background image, at twice the regular console resolution
+        tcod::image::blit_2x(&img, (0, 0), (-1, -1), &mut tcod.root, (0, 0));
+        tcod.root.set_default_foreground(LIGHT_YELLOW);
+        tcod.root.print_ex(
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT / 2 - 4,
+            BackgroundFlag::None,
+            TextAlignment::Center,
+            "A Robber",
+        );
+        tcod.root.print_ex(
+            SCREEN_WIDTH / 2,
+            SCREEN_HEIGHT - 2,
+            BackgroundFlag::None,
+            TextAlignment::Center,
+            "Eduardo Bilk",
+        );
+
+        // show options and wait for the player's choice
+        let choices = &["Play a new game", "Continue last game", "Quit"];
+        let choice = menu("", choices, 24, &mut tcod.root);
+
+        match choice {  
+            Some(0) => {
+                // new game
+                let (mut game, mut objects) = new_game(tcod);
+                play_game(tcod, &mut game, &mut objects);
+            }
+            Some(2) => {
+                // quit
+                break;
+            }
+            _ => {}  
+        }
+        
+    }
 }

@@ -2,6 +2,7 @@ use std::cmp;
 use rand::Rng;
 
 use tcod::colors::*;
+use tcod::console::*;
 use tcod::map::Map as FovMap;
 use tcod::input;
 
@@ -305,4 +306,19 @@ pub fn target_monster(
             None => return None,
         }
     }
+}
+
+pub fn initialise_fov(tcod: &mut Tcod, map: &Map) {
+    // create the FOV map, according to the generated map
+    for y in 0..MAP_HEIGHT {
+        for x in 0..MAP_WIDTH {
+            tcod.fov.set(
+                x,
+                y,
+                !map[x as usize][y as usize].block_sight,
+                !map[x as usize][y as usize].blocked,
+            );
+        }
+    }
+    tcod.con.clear();
 }
