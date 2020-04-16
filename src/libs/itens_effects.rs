@@ -17,14 +17,7 @@ pub fn cast_heal(
         }
         game.messages
             .add("Your wounds start to feel better!", LIGHT_VIOLET);
-
-        match game.inventory[_inventory_id].item {
-            Some(Item::MinorHeal) => objects[PLAYER].heal(MINOR_HEAL_AMOUNT),
-            Some(Item::Heal) => objects[PLAYER].heal(HEAL_AMOUNT),
-            Some(Item::MajorHeal) => objects[PLAYER].heal(MAJOR_HEAL_AMOUNT),
-            _ => (),
-        }
-        
+        objects[PLAYER].heal(HEAL_AMOUNT);
         return UseResult::UsedUp;
     }
     UseResult::Cancelled

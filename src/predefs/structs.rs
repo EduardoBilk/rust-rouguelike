@@ -279,13 +279,8 @@ impl Messages {
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Item {
-    MinorHeal,
     Heal,
-    MajorHeal,
-    PotionPwr,
-    PotionDef,
-    PotionHp,
-    ScrollLighting,
+    ScrollLightning,
     ScrollConfusion,
     ScrollFireball,
 
