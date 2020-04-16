@@ -29,6 +29,8 @@ pub struct Object{
     pub fighter: Option<Fighter>,  
     pub ai: Option<Ai>,
     pub item: Option<Item>,
+    pub always_visible: bool,
+    pub level: i32,
 }
 
 impl Object{
@@ -44,6 +46,8 @@ impl Object{
             fighter: None,
             ai: None,
             item: None,
+            level:1,
+            always_visible: false,
         }
     }
 
@@ -66,7 +70,7 @@ impl Object{
         (((x - self.x).pow(2) + (y - self.y).pow(2)) as f32).sqrt()
     }
 
-    pub fn take_damage(&mut self, damage: i32, game: &mut Game) {
+    pub fn take_damage(&mut self, damage: i32, game: &mut Game) -> Option<i32> {
         // apply damage if possible
         if let Some(fighter) = self.fighter.as_mut() {
             if damage > 0 {
@@ -77,8 +81,10 @@ impl Object{
             if fighter.hp <= 0 {
                 self.alive = false;
                 fighter.on_death.callback(self, game);
+                return Some(fighter.xp);
             }
         }
+        None
     }
 
     pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
@@ -90,7 +96,10 @@ impl Object{
                 "{} attacks {} for {} hit points.",
                 self.name, target.name, damage
             ), ORANGE);
-            target.take_damage(damage, game);
+            if let Some(xp) = target.take_damage(damage, game) {
+                // yield experience to the player
+                self.fighter.as_mut().unwrap().xp += xp;
+            }
         } else {
             game.messages.add(format!(
                 "{} attacks {} but it has no effect!",
@@ -171,6 +180,7 @@ pub struct Game{
     pub map: Map,
     pub messages: Messages,
     pub inventory: Vec<Object>,
+    pub dungeon_level: u32,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -219,6 +229,7 @@ pub struct Fighter {
     pub hp: i32,
     pub defense: i32,
     pub power: i32,
+    pub xp: i32,
     pub on_death: DeathCallback,
 }
 

@@ -62,23 +62,75 @@ pub fn handle_keys(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) 
             }
             DidntTakeTurn
         },
+        (Key { code: Text, .. }, "<", true) => {
+            // go down stairs, if the player is on them
+            let player_on_stairs = objects
+                .iter()
+                .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");
+            if player_on_stairs {
+                next_level(tcod, game, objects);
+            }
+            DidntTakeTurn
+        }
+        (Key { code: Text, .. }, "c", true) => {
+            // show character information
+            let player = &objects[PLAYER];
+            let level = player.level;
+            let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
+            if let Some(fighter) = player.fighter.as_ref() {
+                let msg = format!(
+                    "Character information
+        
+        Level: {}
+        Experience: {}
+        Experience to level up: {}
+        
+        Maximum HP: {}
+        Attack: {}
+        Defense: {}",
+                    level, fighter.xp, level_up_xp, fighter.max_hp, fighter.power, fighter.defense
+                );
+                msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
+            }
+        
+            DidntTakeTurn
+        }
         // movement keys
-        (Key { code: Up, .. },_,true,) => {
-            player_move_or_attack( 0, -1, game, objects);
-            TookTurn 
-        },
-        (Key { code: Down, .. },_,true,) => {
-            player_move_or_attack( 0, 1, game, objects);
+        (Key { code: Up, .. }, _, true) | (Key { code: NumPad8, .. }, _, true) => {
+            player_move_or_attack(0, -1, game, objects);
             TookTurn
-        },
-        (Key { code: Left, .. },_,true,) => {
-            player_move_or_attack( -1, 0, game, objects);
+        }
+        (Key { code: Down, .. }, _, true) | (Key { code: NumPad2, .. }, _, true) => {
+            player_move_or_attack(0, 1, game, objects);
             TookTurn
-        },
-        (Key { code: Right, .. },_,true,) => {
-            player_move_or_attack( 1, 0, game, objects);
+        }
+        (Key { code: Left, .. }, _, true) | (Key { code: NumPad4, .. }, _, true) => {
+            player_move_or_attack(-1, 0, game, objects);
             TookTurn
-        },
+        }
+        (Key { code: Right, .. }, _, true) | (Key { code: NumPad6, .. }, _, true) => {
+            player_move_or_attack(1, 0, game, objects);
+            TookTurn
+        }
+        (Key { code: Home, .. }, _, true) | (Key { code: NumPad7, .. }, _, true) => {
+            player_move_or_attack(-1, -1, game, objects);
+            TookTurn
+        }
+        (Key { code: PageUp, .. }, _, true) | (Key { code: NumPad9, .. }, _, true) => {
+            player_move_or_attack(1, -1, game, objects);
+            TookTurn
+        }
+        (Key { code: End, .. }, _, true) | (Key { code: NumPad1, .. }, _, true) => {
+            player_move_or_attack(-1, 1, game, objects);
+            TookTurn
+        }
+        (Key { code: PageDown, .. }, _, true) | (Key { code: NumPad3, .. }, _, true) => {
+            player_move_or_attack(1, 1, game, objects);
+            TookTurn
+        }
+        (Key { code: NumPad5, .. }, _, true) => {
+            TookTurn // do nothing, i.e. wait for the monster to come to you
+        }
 
         _ => DidntTakeTurn
     }
@@ -118,7 +170,14 @@ pub fn player_death(player: &mut Object, game: &mut Game) {
 pub fn monster_death(monster: &mut Object, game: &mut Game) {
     // transform it into a nasty corpse! it doesn't block, can't be
     // attacked and doesn't move
-    game.messages.add(format!("{} is dead!", monster.name), ORANGE);
+    game.messages.add(
+        format!(
+            "{} is dead! You gain {} experience points.",
+            monster.name,
+            monster.fighter.unwrap().xp
+        ),
+        ORANGE,
+    );
     monster.char = '%';
     monster.color = DARK_RED;
     monster.blocks = false;

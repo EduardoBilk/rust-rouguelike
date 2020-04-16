@@ -60,3 +60,9 @@ pub const PANEL_Y: i32 = SCREEN_HEIGHT - PANEL_HEIGHT;
 pub const MSG_X: i32 = BAR_WIDTH + 2;
 pub const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
 pub const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
+
+// experience and level-ups
+pub const LEVEL_UP_BASE: i32 = 200;
+pub const LEVEL_UP_FACTOR: i32 = 150;
+pub const LEVEL_SCREEN_WIDTH: i32 = 40;
+pub const CHARACTER_SCREEN_WIDTH: i32 = 30;

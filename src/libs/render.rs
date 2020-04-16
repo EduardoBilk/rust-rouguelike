@@ -40,7 +40,10 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
     
     let mut to_draw: Vec<_> = objects
     .iter()
-    .filter(|o| tcod.fov.is_in_fov(o.x, o.y))
+    .filter(|o| {
+        tcod.fov.is_in_fov(o.x, o.y)
+            || (o.always_visible && game.map[o.x as usize][o.y as usize].explored)
+    })
     .collect();
     // sort so that non-blocknig objects come first
     to_draw.sort_by(|o1, o2| o1.blocks.cmp(&o2.blocks));
@@ -85,6 +88,13 @@ pub fn render_all(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_reco
         BackgroundFlag::None,
         TextAlignment::Left,
         get_names_under_mouse(tcod.mouse, objects, &tcod.fov),
+    );
+    tcod.panel.print_ex(
+        1,
+        3,
+        BackgroundFlag::None,
+        TextAlignment::Left,
+        format!("Dungeon level: {}", game.dungeon_level),
     );
 
     // blit the contents of `panel` to the root console

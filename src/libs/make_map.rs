@@ -15,6 +15,8 @@ pub fn make_map(objects: &mut Vec<Object>) -> Map{
     
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
     let mut rooms = vec![];
+    assert_eq!(&objects[PLAYER] as *const _, &objects[0] as *const _);
+    objects.truncate(1);
 
     for _ in 0..MAX_ROOMS {
         // random width and height
@@ -59,13 +61,34 @@ pub fn make_map(objects: &mut Vec<Object>) -> Map{
                 }
             }
             rooms.push(new_room);
-        }
+        }      
         
     }
-
-    // run through the other rooms and see if they intersect with this one
+    // create stairs at the center of the last room
+    let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
+    let mut stairs = Object::new(last_room_x, last_room_y, '<', "stairs", WHITE, false);
+    stairs.always_visible = true;
+    objects.push(stairs);
 
     map
+}
+/// Advance to the next level
+pub fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
+    game.messages.add(
+        "You take a moment to rest, and recover your strength.",
+        VIOLET,
+    );
+    let heal_hp = objects[PLAYER].fighter.map_or(0, |f| f.max_hp / 2);
+    objects[PLAYER].heal(heal_hp);
+
+    game.messages.add(
+        "After a rare moment of peace, you descend deeper into \
+        the heart of the dungeon...",
+        RED,
+    );
+    game.dungeon_level += 1;
+    game.map = make_map(objects);
+    initialise_fov(tcod, &game.map);
 }
 
 fn create_room(room: Rect, map: &mut Map) {
@@ -128,6 +151,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                     hp: 10,
                     defense: 0,
                     power: 3,
+                    xp: 35,
                     on_death: DeathCallback::Monster,
                 });
                 orc.ai = Some(Ai::Basic);
@@ -139,6 +163,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                     hp: 16,
                     defense: 1,
                     power: 4,
+                    xp: 100,
                     on_death: DeathCallback::Monster,
                 });
                 troll.ai = Some(Ai::Basic);
@@ -194,6 +219,7 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             };
             let (mut object, item) = result;
             object.item = Some(item);
+            object.always_visible = true;
             objects.push(object);
 
                     

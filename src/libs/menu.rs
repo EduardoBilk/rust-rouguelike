@@ -15,7 +15,7 @@ use crate::libs::handle_keys::*;
 use crate::libs::render::*;
 use crate::libs::ai::*;
 
-fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {
+pub fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize> {
     assert!(
         options.len() <= 26,
         "Cannot have a menu with more than 26 options."
@@ -141,6 +141,7 @@ pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         hp: 30,
         defense: 2,
         power: 5,
+        xp:0,
         on_death: DeathCallback::Player,  // <1>
     });
 
@@ -151,7 +152,8 @@ pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         // generate map (at this point it's not drawn to the screen)
         map: make_map(&mut objects),
         messages: Messages::new(),
-        inventory: vec![],  // <1>
+        inventory: vec![],
+        dungeon_level: 1,  
     };
 
     initialise_fov(tcod, &game.map);
@@ -184,6 +186,7 @@ pub fn play_game(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
         render_all(tcod, game, &objects, fov_recompute);
 
         tcod.root.flush();
+        level_up(tcod, game, objects);
 
         // handle keys and exit game if needed
         previous_player_position = objects[PLAYER].pos();
@@ -246,7 +249,7 @@ pub fn main_menu(tcod: &mut Tcod) {
                         play_game(tcod, &mut game, &mut objects);
                     }
                     Err(_e) => {
-                        msgbox(&format!("\nNo saved game to load.\n {:?}", _e), 24, &mut tcod.root);
+                        msgbox(&format!("\nNo saved game to load.\n"), 24, &mut tcod.root);
                         continue;
                     }
                 }
@@ -273,7 +276,7 @@ fn load_game() -> Result<(Game, Vec<Object>), Box<dyn Error>> {
     Ok(result)
 }
 
-fn msgbox(text: &str, width: i32, root: &mut Root) {
+pub fn msgbox(text: &str, width: i32, root: &mut Root) {
     let options: &[&str] = &[];
     menu(text, options, width, root);
 }
