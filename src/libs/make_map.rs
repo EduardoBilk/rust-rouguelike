@@ -12,12 +12,13 @@ use crate::predefs::structs::*;
 use crate::libs::render::*;
 
 
-pub fn make_map(objects: &mut Vec<Object>) -> Map{
+pub fn make_map(objects: &mut Vec<Object>, level: u32) -> Map{
     
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
     let mut rooms = vec![];
     assert_eq!(&objects[PLAYER] as *const _, &objects[0] as *const _);
     objects.truncate(1);
+    
 
     for _ in 0..MAX_ROOMS {
         // random width and height
@@ -35,7 +36,7 @@ pub fn make_map(objects: &mut Vec<Object>) -> Map{
 
             // "paint" it to the map's tiles
             create_room(new_room, &mut map);
-            place_objects(new_room, &map, objects);
+            place_objects(new_room, &map, objects, level);
 
             // center coordinates of the new room, will be useful later
             let (new_x, new_y) = new_room.center();
@@ -88,7 +89,7 @@ pub fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
         RED,
     );
     game.dungeon_level += 1;
-    game.map = make_map(objects);
+    game.map = make_map(objects, game.dungeon_level);
     initialise_fov(tcod, &game.map);
 }
 
@@ -133,11 +134,18 @@ pub fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
         .any(|object| object.blocks && object.pos() == (x, y))
 }
 
-pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
+fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) {
+    // maximum number of monsters per room
+    let max_monsters = from_dungeon_level(
+        &[
+            Transition { level: 1, value: 2 },
+            Transition { level: 4, value: 3 },
+            Transition { level: 6, value: 5 },
+        ],
+        level,
+    );
     // choose random number of monsters
-    let num_monsters = rand::thread_rng().gen_range(0, MAX_ROOM_MONSTERS + 1);
-    // choose random number of items
-    let num_items = rand::thread_rng().gen_range(0, MAX_ROOM_ITEMS + 1);
+    let num_monsters = rand::thread_rng().gen_range(0, max_monsters + 1);
 
     for _ in 0..num_monsters {
         // choose random spot for this monster
@@ -145,13 +153,31 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
         if !is_blocked(x, y, map, objects) {
             // monster random table
+            // monster random table
+            let troll_chance = from_dungeon_level(
+                &[
+                    Transition {
+                        level: 3,
+                        value: 15,
+                    },
+                    Transition {
+                        level: 5,
+                        value: 30,
+                    },
+                    Transition {
+                        level: 7,
+                        value: 60,
+                    },
+                ],
+                level,
+            );
             let monster_chances = &mut [
                 Weighted {
                     weight: 80,
                     item: "orc",
                 },
                 Weighted {
-                    weight: 20,
+                    weight: troll_chance,
                     item: "troll",
                 },
             ];
@@ -160,10 +186,10 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                 "orc" => {
                     let mut orc = Object::new(x, y, 'o', "Orc", DESATURATED_GREEN, true);
                     orc.fighter = Some(Fighter {
-                        max_hp: 10,
-                        hp: 10,
+                        max_hp: 20,
+                        hp: 20,
                         defense: 0,
-                        power: 3,
+                        power: 4,
                         xp: 35,
                         on_death: DeathCallback::Monster,
                     });
@@ -173,10 +199,10 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
                 "troll" => {
                     let mut troll = Object::new(x, y, 'T', "Troll", DARKER_GREEN, true);
                     troll.fighter = Some(Fighter {
-                        max_hp: 16,
-                        hp: 16,
-                        defense: 1,
-                        power: 4,
+                        max_hp: 30,
+                        hp: 30,
+                        defense: 2,
+                        power: 8,
                         xp: 100,
                         on_death: DeathCallback::Monster,
                     });
@@ -189,6 +215,15 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
             objects.push(monster);
         }
     }
+    let max_items = from_dungeon_level(
+        &[
+            Transition { level: 1, value: 1 },
+            Transition { level: 4, value: 2 },
+        ],
+        level,
+    );
+
+    let num_items = rand::thread_rng().gen_range(0, max_items + 1);
     for _ in 0..num_items {
         // choose random spot for this item
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
@@ -198,24 +233,43 @@ pub fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object>) {
         if !is_blocked(x, y, map, objects) {
             // item random table
             let item_chances = &mut [
-                Weighted {
-                    weight: 70,
-                    item: Item::Heal,
-                },
-                Weighted {
-                    weight: 10,
-                    item: Item::ScrollLightning,
-                },
-                Weighted {
-                    weight: 10,
-                    item: Item::ScrollFireball,
-                },
-                Weighted {
-                    weight:10,
-                    item: Item::ScrollConfusion,
-                },
-            ];
-            let item_choice = WeightedChoice::new(item_chances);
+            // healing potion always shows up, even if all other items have 0 chance
+            Weighted {
+                weight: 35,
+                item: Item::Heal,
+            },
+            Weighted {
+                weight: from_dungeon_level(
+                    &[Transition {
+                        level: 4,
+                        value: 25,
+                    }],
+                    level,
+                ),
+                item: Item::ScrollLightning,
+            },
+            Weighted {
+                weight: from_dungeon_level(
+                    &[Transition {
+                        level: 6,
+                        value: 25,
+                    }],
+                    level,
+                ),
+                item: Item::ScrollFireball,
+            },
+            Weighted {
+                weight: from_dungeon_level(
+                    &[Transition {
+                        level: 2,
+                        value: 10,
+                    }],
+                    level,
+                ),
+                item: Item::ScrollConfusion,
+            },
+        ];
+        let item_choice = WeightedChoice::new(item_chances);
             let mut item = match item_choice.ind_sample(&mut rand::thread_rng()) {
                 Item::Heal => {
                     // create a healing potion
@@ -373,4 +427,12 @@ pub fn initialise_fov(tcod: &mut Tcod, map: &Map) {
         }
     }
     tcod.con.clear();
+}
+
+fn from_dungeon_level(table: &[Transition], level: u32) -> u32 {
+    table
+        .iter()
+        .rev()
+        .find(|transition| level >= transition.level)
+        .map_or(0, |transition| transition.value)
 }

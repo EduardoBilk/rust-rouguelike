@@ -13,24 +13,15 @@ pub const ROOM_MAX_SIZE: i32 = 10;
 pub const ROOM_MIN_SIZE: i32 = 6;
 pub const MAX_ROOMS: i32 = 30;
 
-pub const MAX_ROOM_ITEMS: i32 = 2;
 pub const INVENTORY_WIDTH: i32 = 50;
 
-pub const MINOR_HEAL_AMOUNT: i32 = 4;
-pub const HEAL_AMOUNT: i32 = 10;
-pub const MAJOR_HEAL_AMOUNT: i32 = 30;
+pub const HEAL_AMOUNT: i32 = 40;
 pub const LIGHTNING_DAMAGE: i32 = 40;
 pub const LIGHTNING_RANGE: i32 = 5;
 pub const CONFUSE_RANGE: i32 = 8;
 pub const CONFUSE_NUM_TURNS: i32 = 10;
 pub const FIREBALL_RADIUS: i32 = 3;
-pub const FIREBALL_DAMAGE: i32 = 12;
-
-pub const MAX_POWER: i32 = 30;
-pub const MAX_DEFENSE: i32 = 30;
-pub const MAX_MAX_HP: i32 = 100;
-
-pub const MAX_ROOM_MONSTERS: i32 = 3;
+pub const FIREBALL_DAMAGE: i32 = 25;
 
 pub const COLOR_DARK_WALL: Color = Color { r: 0, g: 0, b: 100 };
 pub const COLOR_DARK_GROUND: Color = Color { r: 50, g: 50, b: 150,};

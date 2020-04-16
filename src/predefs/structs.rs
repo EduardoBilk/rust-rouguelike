@@ -5,7 +5,6 @@ use tcod::colors::*;
 use tcod::map::Map as FovMap;
 use tcod::input::{Key, Mouse};
 use crate::libs::handle_keys::*;
-use crate::predefs::constants::*;
 
 
 pub struct Tcod {
@@ -113,30 +112,6 @@ impl Object{
             fighter.hp += amount;
             if fighter.hp > fighter.max_hp {
                 fighter.hp = fighter.max_hp;
-            }
-        }
-    }
-    pub fn inc_power(&mut self, amount: i32) {
-        if let Some(ref mut fighter) = self.fighter {
-            fighter.power += amount;
-            if fighter.power > MAX_POWER {
-                fighter.power = MAX_POWER;
-            }
-        }
-    }
-    pub fn inc_defense(&mut self, amount: i32) {
-        if let Some(ref mut fighter) = self.fighter {
-            fighter.defense += amount;
-            if fighter.defense > MAX_DEFENSE {
-                fighter.defense = MAX_DEFENSE;
-            }
-        }
-    }
-    pub fn inc_max_hp(&mut self, amount: i32) {
-        if let Some(ref mut fighter) = self.fighter {
-            fighter.max_hp += amount;
-            if fighter.max_hp > MAX_MAX_HP {
-                fighter.max_hp = MAX_MAX_HP;
             }
         }
     }
@@ -290,4 +265,8 @@ pub enum Item {
 pub enum UseResult {
     UsedUp,
     Cancelled,
+}
+pub struct Transition {
+    pub level: u32,
+    pub value: u32,
 }

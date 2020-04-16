@@ -99,13 +99,8 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
     // just call the "use_function" if it is defined
     if let Some(item) = game.inventory[inventory_id].item {
         let on_use = match item {
-            MinorHeal => cast_heal,
             Heal => cast_heal,
-            MajorHeal => cast_heal,
-            PotionPwr => cast_potion_pwr,
-            PotionDef => cast_potion_def,
-            PotionHp => cast_potion_hp,
-            ScrollLighting => cast_lightning,
+            ScrollLightning => cast_lightning,
             ScrollConfusion => cast_confusion,
             ScrollFireball => cast_fireball,
         };
@@ -137,10 +132,10 @@ pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     let mut player = Object::new(0, 0, '@', "player", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter {
-        max_hp: 30,
-        hp: 30,
-        defense: 2,
-        power: 5,
+        max_hp: 100,
+        hp: 100,
+        defense: 1,
+        power: 4,
         xp:0,
         on_death: DeathCallback::Player,  // <1>
     });
@@ -150,7 +145,7 @@ pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
 
     let mut game = Game {
         // generate map (at this point it's not drawn to the screen)
-        map: make_map(&mut objects),
+        map: make_map(&mut objects,1),
         messages: Messages::new(),
         inventory: vec![],
         dungeon_level: 1,  
