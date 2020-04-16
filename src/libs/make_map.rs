@@ -10,6 +10,7 @@ use tcod::input;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
 use crate::libs::render::*;
+use crate::libs::menu::{get_equipped_in_slot};
 
 
 pub fn make_map(objects: &mut Vec<Object>, level: u32) -> Map{
@@ -268,6 +269,7 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) 
                 ),
                 item: Item::ScrollConfusion,
             },
+            Weighted {weight: 1000, item: Item::Equipment},
         ];
         let item_choice = WeightedChoice::new(item_chances);
             let mut item = match item_choice.ind_sample(&mut rand::thread_rng()) {
@@ -296,6 +298,13 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) 
                     let mut object =
                         Object::new(x, y, '#', "scroll of confusion", LIGHT_YELLOW, false);
                     object.item = Some(Item::ScrollConfusion);
+                    object
+                }
+                Item::Equipment => {
+                    // create a sword
+                    let mut object = Object::new(x, y, '/', "sword", SKY, false);
+                    object.item = Some(Item::Equipment);
+                    object.equipment = Some(Equipment{equipped: false, slot: Slot::RightHand});
                     object
                 }
             };
@@ -336,7 +345,16 @@ pub fn pick_item_up(object_id: usize, game: &mut Game, objects: &mut Vec<Object>
         let item = objects.swap_remove(object_id);
         game.messages
             .add(format!("You picked up a {}!", item.name), GREEN);
+        let index = game.inventory.len();
+        let slot = item.equipment.map(|e| e.slot);
         game.inventory.push(item);
+
+        // automatically equip, if the corresponding equipment slot is unused
+        if let Some(slot) = slot {
+            if get_equipped_in_slot(slot, &game.inventory).is_none() {
+                game.inventory[index].equip(&mut game.messages);
+            }
+        }
     }
 }
 

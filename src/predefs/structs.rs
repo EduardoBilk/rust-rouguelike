@@ -30,6 +30,7 @@ pub struct Object{
     pub item: Option<Item>,
     pub always_visible: bool,
     pub level: i32,
+    pub equipment: Option<Equipment>,
 }
 
 impl Object{
@@ -47,6 +48,7 @@ impl Object{
             item: None,
             level:1,
             always_visible: false,
+            equipment: None,
         }
     }
 
@@ -113,6 +115,56 @@ impl Object{
             if fighter.hp > fighter.max_hp {
                 fighter.hp = fighter.max_hp;
             }
+        }
+    }
+
+    /// Equip object and show a message about it
+    pub fn equip(&mut self, messages: &mut Messages) {
+        if self.item.is_none() {
+            messages.add(
+                format!("Can't equip {:?} because it's not an Item.", self),
+                RED,
+            );
+            return;
+        };
+        if let Some(ref mut equipment) = self.equipment {
+            if !equipment.equipped {
+                equipment.equipped = true;
+                messages.add(
+                    format!("Equipped {} on {}.", self.name, equipment.slot),
+                    LIGHT_GREEN,
+                );
+            }
+        } else {
+            messages.add(
+                format!("Can't equip {:?} because it's not an Equipment.", self),
+                RED,
+            );
+        }
+    }
+
+    // Dequip object and show a message about it
+    pub fn dequip(&mut self, messages: &mut Messages) {
+        if self.item.is_none() {
+            messages.add(
+                format!("Can't dequip {:?} because it's not an Item.", self),
+                RED,
+            );
+            return;
+        };
+        if let Some(ref mut equipment) = self.equipment {
+            if equipment.equipped {
+                equipment.equipped = false;
+                messages.add(
+                    format!("Dequipped {} from {}.", self.name, equipment.slot),
+                    LIGHT_YELLOW,
+                );
+            }
+        } else {
+            messages.add(
+                format!("Can't dequip {:?} because it's not an Equipment.", self),
+                RED,
+            );
         }
     }
     
@@ -258,15 +310,42 @@ pub enum Item {
     ScrollLightning,
     ScrollConfusion,
     ScrollFireball,
-
+    Equipment,
 
 }
 #[derive(Serialize, Deserialize)]
 pub enum UseResult {
     UsedUp,
+    UsedAndKept,
     Cancelled,
 }
+
+#[derive(Serialize, Deserialize)]
 pub struct Transition {
     pub level: u32,
     pub value: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+/// An object that can be equipped, yielding bonuses.
+pub struct Equipment {
+    pub slot: Slot,
+    pub equipped: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub enum Slot {
+    LeftHand,
+    RightHand,
+    Head,
+}
+
+impl std::fmt::Display for Slot {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Slot::LeftHand => write!(f, "left hand"),
+            Slot::RightHand => write!(f, "right hand"),
+            Slot::Head => write!(f, "head"),
+        }
+    }
 }

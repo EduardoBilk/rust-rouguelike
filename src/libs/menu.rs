@@ -81,7 +81,18 @@ pub fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Op
     let options = if inventory.len() == 0 {
         vec!["Inventory is empty.".into()]
     } else {
-        inventory.iter().map(|item| item.name.clone()).collect()
+        inventory
+        .iter()
+        .map(|item| {
+            // show additional information, in case it's equipped
+            match item.equipment {
+                Some(equipment) if equipment.equipped => {
+                    format!("{} (on {})", item.name, equipment.slot)
+                }
+                _ => item.name.clone(),
+        }
+    })
+    .collect()
     };
 
     let inventory_index = menu(header, &options, INVENTORY_WIDTH, root);
@@ -103,12 +114,14 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
             ScrollLightning => cast_lightning,
             ScrollConfusion => cast_confusion,
             ScrollFireball => cast_fireball,
+            Equipment => toggle_equipment
         };
         match on_use(inventory_id, tcod, game, objects) {
             UseResult::UsedUp => {
                 // destroy after use, unless it was cancelled for some reason
                 game.inventory.remove(inventory_id);
             }
+            UseResult::UsedAndKept => {}
             UseResult::Cancelled => {
                 game.messages.add("Cancelled", WHITE);
             }
@@ -120,8 +133,24 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
         );
     }
 }
+pub fn get_equipped_in_slot(slot: Slot, inventory: &[Object]) -> Option<usize> {
+    for (inventory_id, item) in inventory.iter().enumerate() {
+        if item
+            .equipment
+            .as_ref()
+            .map_or(false, |e| e.equipped && e.slot == slot)
+        {
+            return Some(inventory_id);
+        }
+    }
+    None
+}
+
 pub fn drop_item(inventory_id: usize, game: &mut Game, objects: &mut Vec<Object>) {
     let mut item = game.inventory.remove(inventory_id);
+    if item.equipment.is_some() {
+        item.dequip(&mut game.messages);
+    }
     item.set_pos(objects[PLAYER].x, objects[PLAYER].y);
     game.messages
         .add(format!("You dropped a {}.", item.name), YELLOW);

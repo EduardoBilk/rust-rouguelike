@@ -2,6 +2,7 @@ use tcod::colors::*;
 use crate::predefs::constants::*;
 use crate::predefs::structs::*;
 use crate::libs::make_map::{closest_monster, target_tile, target_monster};
+use crate::libs::menu::{get_equipped_in_slot};
 
 pub fn cast_heal(
     _inventory_id: usize,
@@ -134,4 +135,27 @@ pub fn cast_fireball(
     objects[PLAYER].fighter.as_mut().unwrap().xp += xp_to_gain;
 
     UseResult::UsedUp
+}
+
+pub fn toggle_equipment(
+    inventory_id: usize,
+    _tcod: &mut Tcod,
+    game: &mut Game,
+    _objects: &mut [Object],
+) -> UseResult {
+    
+    let equipment = match game.inventory[inventory_id].equipment {
+        Some(equipment) => equipment,
+        None => return UseResult::Cancelled,
+    };
+    // if the slot is already being used, dequip whatever is there first
+    if let Some(current) = get_equipped_in_slot(equipment.slot, &game.inventory) {
+        game.inventory[current].dequip(&mut game.messages);
+    }
+    if equipment.equipped {
+        game.inventory[inventory_id].dequip(&mut game.messages);
+    } else {
+        game.inventory[inventory_id].equip(&mut game.messages);
+    }
+    UseResult::UsedAndKept
 }
