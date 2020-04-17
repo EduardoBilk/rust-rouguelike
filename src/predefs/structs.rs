@@ -90,7 +90,7 @@ impl Object{
 
     pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
         // a simple formula for attack damage
-        let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
+        let damage = self.power(game) - target.defense(game);
         if damage > 0 {
             // make the target take some damage
             game.messages.add(format!(
@@ -108,15 +108,44 @@ impl Object{
             ), ORANGE);
         }
     }
+    pub fn power(&self, game: &Game) -> i32 {
+        let base_power = self.fighter.map_or(0, |f| f.base_power);
+        let bonus: i32 = self
+        .get_all_equipped(game)
+        .iter()
+        .map(|e| e.power_bonus)
+        .sum();
+        base_power + bonus
+    }
+    pub fn defense(&self, game: &Game) -> i32 {
+        let base_defense = self.fighter.map_or(0, |f| f.base_defense);
+        let bonus: i32 = self
+            .get_all_equipped(game)
+            .iter()
+            .map(|e| e.defense_bonus)
+            .sum();
+        base_defense + bonus
+    }
+    pub fn max_hp(&self, game: &Game) -> i32 {
+        let base_max_hp = self.fighter.map_or(0, |f| f.base_max_hp);
+        let bonus: i32 = self
+            .get_all_equipped(game)
+            .iter()
+            .map(|e| e.max_hp_bonus)
+            .sum();
+        base_max_hp + bonus
+    }
 
-    pub fn heal(&mut self, amount: i32) {
+    pub fn heal(&mut self, amount: i32, game: &Game) {
+        let max_hp = self.max_hp(game);  
         if let Some(ref mut fighter) = self.fighter {
             fighter.hp += amount;
-            if fighter.hp > fighter.max_hp {
-                fighter.hp = fighter.max_hp;
+            if fighter.hp > max_hp {  
+                fighter.hp = max_hp;  
             }
         }
     }
+    
 
     /// Equip object and show a message about it
     pub fn equip(&mut self, messages: &mut Messages) {
@@ -140,6 +169,18 @@ impl Object{
                 format!("Can't equip {:?} because it's not an Equipment.", self),
                 RED,
             );
+        }
+    }
+    /// returns a list of equipped items
+    pub fn get_all_equipped(&self, game: &Game) -> Vec<Equipment> {
+        if self.name == "player" {
+            game.inventory
+                .iter()
+                .filter(|item| item.equipment.map_or(false, |e| e.equipped))
+                .map(|item| item.equipment.unwrap())
+                .collect()
+        } else {
+            vec![] // other objects have no equipment
         }
     }
 
@@ -252,10 +293,10 @@ pub enum PlayerAction {
 // combat-related properties and methods (monster, player, NPC).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Fighter {
-    pub max_hp: i32,
+    pub base_max_hp: i32,
     pub hp: i32,
-    pub defense: i32,
-    pub power: i32,
+    pub base_defense: i32,
+    pub base_power: i32,
     pub xp: i32,
     pub on_death: DeathCallback,
 }
@@ -310,7 +351,8 @@ pub enum Item {
     ScrollLightning,
     ScrollConfusion,
     ScrollFireball,
-    Equipment,
+    Sword,
+    Shield,
 
 }
 #[derive(Serialize, Deserialize)]
@@ -331,6 +373,9 @@ pub struct Transition {
 pub struct Equipment {
     pub slot: Slot,
     pub equipped: bool,
+    pub power_bonus: i32,
+    pub defense_bonus: i32,
+    pub max_hp_bonus: i32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

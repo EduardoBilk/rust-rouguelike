@@ -81,8 +81,8 @@ pub fn next_level(tcod: &mut Tcod, game: &mut Game, objects: &mut Vec<Object>) {
         "You take a moment to rest, and recover your strength.",
         VIOLET,
     );
-    let heal_hp = objects[PLAYER].fighter.map_or(0, |f| f.max_hp / 2);
-    objects[PLAYER].heal(heal_hp);
+    let heal_hp = objects[PLAYER].max_hp(game) / 2;
+    objects[PLAYER].heal(heal_hp, game);
 
     game.messages.add(
         "After a rare moment of peace, you descend deeper into \
@@ -187,10 +187,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) 
                 "orc" => {
                     let mut orc = Object::new(x, y, 'o', "Orc", DESATURATED_GREEN, true);
                     orc.fighter = Some(Fighter {
-                        max_hp: 20,
+                        base_max_hp: 20,
                         hp: 20,
-                        defense: 0,
-                        power: 4,
+                        base_defense: 0,
+                        base_power: 4,
                         xp: 35,
                         on_death: DeathCallback::Monster,
                     });
@@ -200,10 +200,10 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) 
                 "troll" => {
                     let mut troll = Object::new(x, y, 'T', "Troll", DARKER_GREEN, true);
                     troll.fighter = Some(Fighter {
-                        max_hp: 30,
+                        base_max_hp: 30,
                         hp: 30,
-                        defense: 2,
-                        power: 8,
+                        base_defense: 2,
+                        base_power: 8,
                         xp: 100,
                         on_death: DeathCallback::Monster,
                     });
@@ -269,7 +269,20 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) 
                 ),
                 item: Item::ScrollConfusion,
             },
-            Weighted {weight: 1000, item: Item::Equipment},
+            Weighted {
+                weight: from_dungeon_level(&[Transition { level: 4, value: 5 }], level),
+                item: Item::Sword, 
+            },
+            Weighted {
+                weight: from_dungeon_level(
+                    &[Transition {
+                        level: 8,
+                        value: 15,
+                    }],
+                    level,
+                ),
+                item: Item::Shield, 
+            },
         ];
         let item_choice = WeightedChoice::new(item_chances);
             let mut item = match item_choice.ind_sample(&mut rand::thread_rng()) {
@@ -300,11 +313,30 @@ fn place_objects(room: Rect, map: &Map, objects: &mut Vec<Object> , level: u32) 
                     object.item = Some(Item::ScrollConfusion);
                     object
                 }
-                Item::Equipment => {
+                Item::Sword => {
                     // create a sword
                     let mut object = Object::new(x, y, '/', "sword", SKY, false);
-                    object.item = Some(Item::Equipment);
-                    object.equipment = Some(Equipment{equipped: false, slot: Slot::RightHand});
+                    object.item = Some(Item::Sword);
+                    object.equipment = Some(Equipment {
+                        equipped: false,
+                        slot: Slot::RightHand,
+                        max_hp_bonus: 0,
+                        defense_bonus: 0,
+                        power_bonus: 3,
+                    });
+                    object
+                }
+                Item::Shield => {
+                    // create a shield
+                    let mut object = Object::new(x, y, '[', "shield", DARKER_ORANGE, false);
+                    object.item = Some(Item::Shield);
+                    object.equipment = Some(Equipment {
+                        equipped: false,
+                        slot: Slot::LeftHand,
+                        max_hp_bonus: 0,
+                        defense_bonus: 1,
+                        power_bonus: 0,
+                    });
                     object
                 }
             };

@@ -114,7 +114,9 @@ pub fn use_item(inventory_id: usize, tcod: &mut Tcod, game: &mut Game, objects: 
             ScrollLightning => cast_lightning,
             ScrollConfusion => cast_confusion,
             ScrollFireball => cast_fireball,
-            Equipment => toggle_equipment
+            Sword => toggle_equipment,
+            Shield => toggle_equipment,
+
         };
         match on_use(inventory_id, tcod, game, objects) {
             UseResult::UsedUp => {
@@ -161,14 +163,13 @@ pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
     let mut player = Object::new(0, 0, '@', "player", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter {
-        max_hp: 100,
+        base_max_hp: 100,
         hp: 100,
-        defense: 1,
-        power: 4,
+        base_defense: 1,
+        base_power: 2,
         xp:0,
         on_death: DeathCallback::Player,  // <1>
     });
-
     // the list of objects with just the player
     let mut objects = vec![player];
 
@@ -179,6 +180,17 @@ pub fn new_game(tcod: &mut Tcod) -> (Game, Vec<Object>) {
         inventory: vec![],
         dungeon_level: 1,  
     };
+    // initial equipment: a dagger
+    let mut dagger = Object::new(0, 0, '-', "dagger", SKY, false);
+    dagger.item = Some(Item::Sword);
+    dagger.equipment = Some(Equipment {
+        equipped: true,
+        slot: Slot::LeftHand,
+        max_hp_bonus: 0,
+        defense_bonus: 0,
+        power_bonus: 2,
+    });
+    game.inventory.push(dagger);
 
     initialise_fov(tcod, &game.map);
 
