@@ -1,7 +1,7 @@
 # A Robber
 ## a rouguelike console game writen in rust.
 
-to see it working you can donwload the binaries from the release
+to see it working you can donwload the binaries from the [releases page](https://github.com/EduardoBilk/rust-rouguelike/releases/tag/0.1.0)
 
 
 or you can clone the repo and build it yourself. if so make sure to have rust proper installed in your machine.
