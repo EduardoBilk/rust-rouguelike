@@ -266,7 +266,7 @@ pub fn main_menu(tcod: &mut Tcod) {
             SCREEN_HEIGHT - 2,
             BackgroundFlag::None,
             TextAlignment::Center,
-            "Eduardo Bilk",
+            "/Eduardo Bilk",
         );
 
         // show options and wait for the player's choice

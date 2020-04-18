@@ -1,5 +1,5 @@
 [package]
-name = "rouguelike"
+name = "a-robber"
 version = "0.1.0"
 authors = ["ebilk"]
 edition = "2018"
