@@ -46,8 +46,11 @@ then just clone it
 $ git clone https://github.com/EduardoBilk/rust-rouguelike.git a-robber
 $ cd a-robber
 ```
-
-you can run it with:
+set the proper version of the rust toolchain only for the working directory
+```
+$ rustup override set 1.34.0
+```
+now, you can run it with:
 
 ```
 $ cargo run --release
