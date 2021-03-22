@@ -12,15 +12,15 @@ if so make sure to have rust proper installed in your machine.
 I intentionally didn't explain the controls in the game, beacause it makes part of the discovery.
 But if you just want to play around, quick and easy, here it goes:
 
-| Action        | key     |
-| :-----------_ | :-----: | 
-| walk          | arrows  |
-| attack        | arrows  |
-| grab itens (!)|    g    |
-| char info     |    c    |
-| inventory     |    i    |
-| drop itens    |    d    |
-| next level (<)|    <    |
+| Action         | Key    |
+|----------------|--------|
+| walk           | arrows |
+| attack         | arrows |
+| grab itens (!) | g      |
+| char info      | c      |
+| inventor       | i      |
+| drop itens     | d      |
+| next level (<) | <      |
 
 
 ### Rust instalation
