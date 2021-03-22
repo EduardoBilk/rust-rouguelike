@@ -33,6 +33,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 if you prefer the old and gold standalone installers pick your best suite at the [official site](https://forge.rust-lang.org/infra/other-installation-methods.html#standalone)
 
 
+
 ### How to build the game 
 
 make sure you have all dependencies installed
@@ -40,11 +41,13 @@ make sure you have all dependencies installed
 $ sudo apt-get install gcc g++ make libsdl2-dev
 ```
 
+then just clone it
 ```
 $ git clone https://github.com/EduardoBilk/rust-rouguelike.git a-robber
 $ cd a-robber
 ```
-Then you can run it with:
+
+you can run it with:
 
 ```
 $ cargo run --release
